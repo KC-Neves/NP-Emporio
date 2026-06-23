@@ -218,7 +218,7 @@ export function useAuth() {
   const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     console.log('[AUTH] signUp start');
     try {
-      const redirectUrl = `${getBaseUrl()}/auth/callback`;
+      const redirectUrl = `https://np-emporio.vercel.app/auth/callback`;
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -314,7 +314,7 @@ export function useAuth() {
   const resendConfirmation = async (email: string) => {
     console.log('[AUTH] resendConfirmation start');
     try {
-      const redirectUrl = `${getBaseUrl()}/auth/callback`;
+      const redirectUrl = `https://np-emporio.vercel.app/auth/callback`;
       const { data, error } = await supabase.auth.resend({
         type: 'signup',
         email,
