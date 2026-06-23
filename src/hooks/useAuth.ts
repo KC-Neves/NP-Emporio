@@ -314,7 +314,7 @@ export function useAuth() {
   const resendConfirmation = async (email: string) => {
     console.log('[AUTH] resendConfirmation start');
     try {
-      const redirectUrl = `${getBaseUrl()}/auth-callback`;
+      const redirectUrl = `${getBaseUrl()}/auth/callback`;
       const { data, error } = await supabase.auth.resend({
         type: 'signup',
         email,
