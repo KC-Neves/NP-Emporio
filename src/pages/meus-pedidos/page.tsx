@@ -343,7 +343,7 @@ export default function MeusPedidosPage() {
           ) : (
             <div className="space-y-4">
               {userOrders.map((order) => {
-                const status = STATUS_CONFIG[order.status];
+                const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
                 const isExpanded = expandedOrder === order.id;
                 const progress = getStatusProgress(order.status);
 
@@ -588,10 +588,15 @@ export default function MeusPedidosPage() {
 
             <div className="p-4 space-y-4">
               <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${STATUS_CONFIG[selectedOrder.status].badgeClass}`}>
-                  <i className={STATUS_CONFIG[selectedOrder.status].icon}></i>
-                  {STATUS_CONFIG[selectedOrder.status].label}
-                </span>
+                {(() => {
+                  const statusConfig = STATUS_CONFIG[selectedOrder.status] || STATUS_CONFIG.pending;
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.badgeClass}`}>
+                      <i className={statusConfig.icon}></i>
+                      {statusConfig.label}
+                    </span>
+                  );
+                })()}
                 <span className="text-xs text-np-purple-500">
                   {ORDER_TYPE_LABELS[selectedOrder.orderType]}
                 </span>
