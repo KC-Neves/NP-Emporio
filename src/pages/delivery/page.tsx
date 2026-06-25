@@ -1,3 +1,4 @@
+import NeighborhoodSelector from "@/components/NeighborhoodSelector";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart, type CartItemCustomization } from "@/hooks/useCart";
@@ -472,20 +473,11 @@ export default function DeliveryPage() {
               <label className="block text-sm font-medium text-np-purple-800 mb-2">
                 Bairro * <span className="text-np-purple-400 font-normal text-xs">(define a taxa de entrega)</span>
               </label>
-              <select value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-np-wood-300 focus:outline-none focus:ring-2 focus:ring-np-purple-500 text-sm bg-white">
-                <option value="">Selecione um bairro...</option>
-                {zonesLoading ? (
-                  <option value="" disabled>Carregando bairros...</option>
-                ) : (
-                  Array.from(zonesByLabel.entries()).map(([label, zones]) => (
-                    <optgroup key={label} label={`${label} — R$ ${zones[0]?.fee.toFixed(2)}`}>
-                      {zones.map((z) => (
-                        <option key={z.id} value={z.neighborhood}>{z.neighborhood}</option>
-                      ))}
-                    </optgroup>
-                  ))
-                )}
-              </select>
+              <NeighborhoodSelector
+                zones={activeZones}
+                value={neighborhood}
+                onChange={setNeighborhood}
+              />
               {activeZones.length === 0 && !zonesLoading && (
                 <p className="text-xs text-red-600 mt-1">
                   <i className="ri-error-warning-line mr-1"></i>
