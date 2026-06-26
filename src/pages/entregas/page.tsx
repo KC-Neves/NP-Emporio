@@ -119,7 +119,19 @@ export default function EntregasPage() {
   const [activeTab, setActiveTab] = useState<TabType>("preparando");
   const [selectedDelivery, setSelectedDelivery] = useState<Order | null>(null);
   const trackingStartedRef = useRef<Set<string>>(new Set());
-  const [earningsDate, setEarningsDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const getLocalDateKey = (date: Date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const getOrderLocalDateKey = (value: string | Date) => {
+    const date = new Date(value);
+    return getLocalDateKey(date);
+  };
+
+  const [earningsDate, setEarningsDate] = useState(() => getLocalDateKey());
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const prevStatusRef = useRef<Map<string, Order["status"]>>(new Map());
@@ -279,12 +291,9 @@ export default function EntregasPage() {
 
   // Daily earnings — ONLY delivery fees
   const dailyDeliveries = useMemo(() => {
-    const startOfDay = new Date(earningsDate + "T00:00:00");
-    const endOfDay = new Date(earningsDate + "T23:59:59");
-    return completedDeliveries.filter((o) => {
-      const d = new Date(o.createdAt);
-      return d >= startOfDay && d <= endOfDay;
-    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return completedDeliveries
+      .filter((o) => getOrderLocalDateKey(o.createdAt) === earningsDate)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [completedDeliveries, earningsDate]);
 
   const dailyEarnings = useMemo(() => {
@@ -863,7 +872,7 @@ export default function EntregasPage() {
                     className="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                   <button
-                    onClick={() => setEarningsDate(new Date().toISOString().slice(0, 10))}
+                    onClick={() => setEarningsDate(getLocalDateKey())}
                     className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors whitespace-nowrap"
                   >
                     Hoje
