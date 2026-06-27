@@ -7,10 +7,6 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ item, variant = 'full' }: ProductCardProps) {
-  const isBeverage = item.category === 'bebidas';
-  const isTorres = item.category === 'torres';
-  const isDoces = item.category === 'doces';
-  const isCompact = isTorres || isDoces;
   const hasRating = item.rating && item.rating > 0;
   const isCompactVariant = variant === 'compact';
 
@@ -22,10 +18,7 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
     return '0%';
   });
 
-  const imageContainerClasses = isBeverage
-    ? 'relative overflow-hidden h-[260px] bg-white'
-    : 'relative overflow-hidden h-[200px] bg-white';
-
+  const imageContainerClasses = 'relative overflow-hidden h-[220px] bg-white';
   const imageClasses = 'w-full h-full object-cover object-center';
 
   return (
@@ -36,6 +29,7 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
           alt={item.name}
           className={`transition-transform duration-500 group-hover:scale-105 ${imageClasses}`}
         />
+
         {item.featured && (
           <span className="absolute top-3 left-3 bg-np-gold-500 text-np-purple-900 text-xs font-bold px-3 py-1 rounded-full">
             <i className="ri-star-line mr-1"></i>
@@ -49,10 +43,12 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
           <h3 className="font-display text-lg font-bold text-np-purple-900 group-hover:text-np-purple-700 transition-colors">
             {item.name}
           </h3>
+
           <span className="font-display font-bold text-lg whitespace-nowrap ml-2 text-np-purple-700">
             {item.priceFormatted}
           </span>
         </div>
+
         <p className="text-sm text-np-purple-600 leading-relaxed mb-2">
           {item.description}
         </p>
@@ -69,9 +65,11 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
                 </div>
               ))}
             </div>
+
             <span className="text-xs font-medium text-np-purple-600">
               {item.rating?.toFixed(1)}
             </span>
+
             <span className="text-xs text-np-purple-400">
               ({item.ratingCount})
             </span>
@@ -88,6 +86,7 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
             <i className="ri-restaurant-line mr-1"></i>
             Mesa
           </Link>
+
           <Link
             to="/delivery"
             className={`flex-1 text-center transition-colors whitespace-nowrap rounded-lg border border-np-green-300 text-np-green-700 hover:bg-np-green-50 font-medium ${
@@ -101,4 +100,4 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
       </div>
     </div>
   );
-}
+} 
