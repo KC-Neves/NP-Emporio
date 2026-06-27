@@ -18,16 +18,13 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
     return '0%';
   });
 
-  const imageContainerClasses = 'relative overflow-hidden h-[220px] bg-white';
-  const imageClasses = 'w-full h-full object-cover object-center';
-
   return (
-    <div className="group bg-white rounded-xl border border-np-wood-200 overflow-hidden hover:shadow-lg transition-all duration-300">
-      <div className={imageContainerClasses}>
+    <div className="group bg-white rounded-xl border border-np-wood-200 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+      <div className="relative overflow-hidden h-[220px] bg-white flex-shrink-0">
         <img
           src={item.image}
           alt={item.name}
-          className={`transition-transform duration-500 group-hover:scale-105 ${imageClasses}`}
+          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
         />
 
         {item.featured && (
@@ -38,23 +35,23 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
         )}
       </div>
 
-      <div className={isCompactVariant ? 'p-4' : 'p-5'}>
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-display text-lg font-bold text-np-purple-900 group-hover:text-np-purple-700 transition-colors">
+      <div className={`${isCompactVariant ? 'p-4' : 'p-5'} flex flex-col flex-1`}>
+        <div className="flex items-start justify-between mb-2 gap-3">
+          <h3 className="font-display text-lg font-bold text-np-purple-900 group-hover:text-np-purple-700 transition-colors leading-tight">
             {item.name}
           </h3>
 
-          <span className="font-display font-bold text-lg whitespace-nowrap ml-2 text-np-purple-700">
+          <span className="font-display font-bold text-lg whitespace-nowrap text-np-purple-700">
             {item.priceFormatted}
           </span>
         </div>
 
-        <p className="text-sm text-np-purple-600 leading-relaxed mb-2">
+        <p className="text-sm text-np-purple-600 leading-relaxed mb-3 line-clamp-3 min-h-[63px]">
           {item.description}
         </p>
 
-        {hasRating && (
-          <div className="flex items-center gap-1.5 mb-3">
+        {hasRating ? (
+          <div className="flex items-center gap-1.5 mb-4 min-h-[20px]">
             <div className="flex items-center gap-0.5">
               {starWidths.map((w, i) => (
                 <div key={i} className="relative w-4 h-4 flex items-center justify-center">
@@ -74,9 +71,11 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
               ({item.ratingCount})
             </span>
           </div>
+        ) : (
+          <div className="mb-4 min-h-[20px]"></div>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           <Link
             to="/pedidos"
             className={`flex-1 text-center transition-colors whitespace-nowrap rounded-lg border border-np-purple-300 text-np-purple-700 hover:bg-np-purple-50 font-medium ${
@@ -100,4 +99,4 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
       </div>
     </div>
   );
-} 
+}
