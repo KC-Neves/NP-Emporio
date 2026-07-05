@@ -91,7 +91,7 @@ serve(async (req) => {
 
     // ── AÇÃO: DELETE ──
     if (action === "delete") {
-      const allowedRoles = ["admin", "caixa"];
+      const allowedRoles = ["admin", "gerente", "caixa"];
       if (callerProfile.status !== "ativo" || !allowedRoles.includes(callerProfile.role)) {
         return new Response(
           JSON.stringify({ error: "Acesso negado para exclusao", code: "FORBIDDEN_ROLE" }),
@@ -122,7 +122,7 @@ serve(async (req) => {
 
     // ── AÇÃO: DELETE_OLD ──
     if (action === "delete_old") {
-      const allowedRoles = ["admin", "caixa"];
+      const allowedRoles = ["admin", "gerente", "caixa"];
       if (callerProfile.status !== "ativo" || !allowedRoles.includes(callerProfile.role)) {
         return new Response(
           JSON.stringify({ error: "Acesso negado", code: "FORBIDDEN_ROLE" }),
@@ -153,7 +153,7 @@ serve(async (req) => {
 
     // ── AÇÃO: DELETE_TESTS ──
     if (action === "delete_tests") {
-      const allowedRoles = ["admin"];
+      const allowedRoles = ["admin", "gerente", "caixa"];
       if (callerProfile.status !== "ativo" || !allowedRoles.includes(callerProfile.role)) {
         return new Response(
           JSON.stringify({ error: "Acesso negado - apenas admin", code: "FORBIDDEN_ROLE" }),
@@ -179,7 +179,7 @@ serve(async (req) => {
     }
 
     // ── AÇÃO PADRÃO: UPDATE STATUS ──
-    const allowedRoles = ["admin", "caixa", "cozinha", "atendente", "entregador"];
+    const allowedRoles = ["admin", "gerente", "caixa"];
     if (callerProfile.status !== "ativo" || !allowedRoles.includes(callerProfile.role)) {
       return new Response(
         JSON.stringify({ error: "Acesso negado", code: "FORBIDDEN_ROLE" }),
