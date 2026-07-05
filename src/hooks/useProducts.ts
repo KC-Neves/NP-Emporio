@@ -52,6 +52,14 @@ const CATEGORY_META: Record<string, { name: string; icon: string }> = {
   bebidas: { name: "Bebidas", icon: "ri-goblet-line" },
 };
 
+const CATEGORY_ORDER = [
+  "torres",
+  "massas",
+  "salgados",
+  "doces",
+  "bebidas",
+];
+
 function formatPrice(price: number): string {
   return `R$ ${price.toFixed(2).replace(".", ",")}`;
 }
@@ -74,7 +82,9 @@ function mapDbToProduct(row: DbProduct): Product {
     stockQuantity: row.stock_quantity ?? 0,
     minStock: row.min_stock ?? 0,
     alertStock: row.alert_stock ?? 0,
-    customizationOptions: row.customization_options ? (row.customization_options as CustomizationOption[]) : undefined,
+    customizationOptions: row.customization_options
+      ? (row.customization_options as CustomizationOption[])
+      : undefined,
     rating: row.rating ?? undefined,
     ratingCount: row.rating_count ?? undefined,
   };
@@ -101,23 +111,20 @@ function mapMockItemToProduct(item: (typeof menuItems)[number]): Product {
 }
 
 function deriveCategories(products: Product[]): MenuCategory[] {
-  const seen = new Set<string>();
-  const cats: MenuCategory[] = [];
-  products.forEach((p) => {
-    if (!seen.has(p.category)) {
-      seen.add(p.category);
-      const meta = CATEGORY_META[p.category] || {
-        name: p.category,
-        icon: "ri-restaurant-line",
-      };
-      cats.push({ id: p.category, name: meta.name, icon: meta.icon });
-    }
-  });
-  return cats;
+  const available = new Set(products.map((p) => p.category));
+
+  return CATEGORY_ORDER
+    .filter((category) => available.has(category))
+    .map((category) => ({
+      id: category,
+      name: CATEGORY_META[category].name,
+      icon: CATEGORY_META[category].icon,
+    }));
 }
 
 function deduplicateProducts(products: Product[]): Product[] {
   const seen = new Set<number>();
+
   return products.filter((p) => {
     if (seen.has(p.id)) return false;
     seen.add(p.id);
@@ -125,9 +132,16 @@ function deduplicateProducts(products: Product[]): Product[] {
   });
 }
 
-function getMockFallback(): { products: Product[]; categories: MenuCategory[] } {
+function getMockFallback(): {
+  products: Product[];
+  categories: MenuCategory[];
+} {
   const mockProducts = menuItems.map(mapMockItemToProduct);
-  return { products: mockProducts, categories: deriveCategories(mockProducts) };
+
+  return {
+    products: mockProducts,
+    categories: deriveCategories(mockProducts),
+  };
 }
 
 export function useProducts(adminMode = false) {
@@ -144,17 +158,25 @@ export function useProducts(adminMode = false) {
       try {
         setLoading(true);
         setError(null);
-        let query = supabase.from("products").select("*").order("display_order").order("id");
+
+        let query = supabase
+          .from("products")
+          .select("*")
+          .order("display_order", { ascending: true })
+          .order("id", { ascending: true });
+
         if (!adminMode) {
           query = query.eq("active", true);
         }
+
         const { data, error: queryError } = await query;
 
         if (queryError) {
           console.error("[PRODUCTS] query error:", queryError.message);
+
           if (isMounted) {
             setError(queryError.message);
-            // Fallback para mocks em caso de erro (só se não tiver dados ainda)
+
             if (products.length === 0) {
               const fallback = getMockFallback();
               setProducts(fallback.products);
@@ -162,14 +184,19 @@ export function useProducts(adminMode = false) {
             }
           }
         } else if (data && isMounted) {
-          const mapped = deduplicateProducts((data as DbProduct[]).map(mapDbToProduct));
+          const mapped = deduplicateProducts(
+            (data as DbProduct[]).map(mapDbToProduct)
+          );
+
           setProducts(mapped);
           setCategories(deriveCategories(mapped));
         }
       } catch (err) {
         console.error("[PRODUCTS] exception:", err);
+
         if (isMounted) {
           setError("Falha ao carregar produtos");
+
           if (products.length === 0) {
             const fallback = getMockFallback();
             setProducts(fallback.products);
@@ -185,12 +212,15 @@ export function useProducts(adminMode = false) {
 
     fetchProducts();
 
-    // Realtime subscription
     const channel = supabase
       .channel("products-realtime-sync")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "products" },
+        {
+          event: "*",
+          schema: "public",
+          table: "products",
+        },
         () => {
           fetchProducts();
         }
@@ -206,10 +236,23 @@ export function useProducts(adminMode = false) {
   const updateProduct = async (
     id: number,
     updates: Partial<
-      Pick<Product, "name" | "description" | "price" | "category" | "featured" | "active" | "stockQuantity" | "minStock" | "alertStock" | "customizationOptions"> & { image_url?: string }
+      Pick<
+        Product,
+        | "name"
+        | "description"
+        | "price"
+        | "category"
+        | "featured"
+        | "active"
+        | "stockQuantity"
+        | "minStock"
+        | "alertStock"
+        | "customizationOptions"
+      > & { image_url?: string }
     >
   ) => {
     const dbUpdates: Record<string, unknown> = {};
+
     if (updates.name !== undefined) dbUpdates.name = updates.name;
     if (updates.description !== undefined) dbUpdates.description = updates.description;
     if (updates.price !== undefined) dbUpdates.price = updates.price;
@@ -220,7 +263,8 @@ export function useProducts(adminMode = false) {
     if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
     if (updates.alertStock !== undefined) dbUpdates.alert_stock = updates.alertStock;
     if (updates.image_url !== undefined) dbUpdates.image_url = updates.image_url;
-    if (updates.customizationOptions !== undefined) dbUpdates.customization_options = updates.customizationOptions;
+    if (updates.customizationOptions !== undefined)
+      dbUpdates.customization_options = updates.customizationOptions;
 
     const { error } = await supabase
       .from("products")
@@ -252,19 +296,22 @@ export function useProducts(adminMode = false) {
     alert_stock?: number;
     customization_options?: CustomizationOption[];
   }) => {
-    const { error } = await supabase.from("products").insert({
-      name: data.name,
-      description: data.description,
-      price: data.price,
-      category: data.category,
-      image_url: data.image_url || null,
-      active: true,
-      featured: false,
-      stock_quantity: data.stock_quantity ?? 0,
-      min_stock: data.min_stock ?? 5,
-      alert_stock: data.alert_stock ?? 10,
-      customization_options: data.customization_options || null,
-    }).select("*");
+    const { error } = await supabase
+      .from("products")
+      .insert({
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        category: data.category,
+        image_url: data.image_url || null,
+        active: true,
+        featured: false,
+        stock_quantity: data.stock_quantity ?? 0,
+        min_stock: data.min_stock ?? 5,
+        alert_stock: data.alert_stock ?? 10,
+        customization_options: data.customization_options || null,
+      })
+      .select("*");
 
     return { error };
   };
@@ -273,5 +320,14 @@ export function useProducts(adminMode = false) {
     setFetchKey((k) => k + 1);
   }, []);
 
-  return { products, categories, loading, error, updateProduct, deleteProduct, createProduct, refresh };
+  return {
+    products,
+    categories,
+    loading,
+    error,
+    updateProduct,
+    deleteProduct,
+    createProduct,
+    refresh,
+  };
 }
