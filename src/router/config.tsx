@@ -35,7 +35,7 @@ const routes: RouteObject[] = [
   {
     path: "/minha-conta",
     element: (
-      <RoleGuard allowedRoles={["cliente", "admin", "atendente", "caixa", "entregador"]}>
+      <RoleGuard allowedRoles={["cliente", "admin", "gerente", "atendente", "caixa", "entregador"]}>
         <MinhaConta />
       </RoleGuard>
     ),
@@ -47,7 +47,7 @@ const routes: RouteObject[] = [
   {
     path: "/cozinha",
     element: (
-      <RoleGuard allowedRoles={["cozinha", "admin"]}>
+      <RoleGuard allowedRoles={["cozinha", "admin", "gerente"]}>
         <Cozinha />
       </RoleGuard>
     ),
@@ -55,7 +55,7 @@ const routes: RouteObject[] = [
   {
     path: "/caixa",
     element: (
-      <RoleGuard allowedRoles={["caixa", "admin"]}>
+      <RoleGuard allowedRoles={["caixa", "admin", "gerente"]}>
         <Caixa />
       </RoleGuard>
     ),
@@ -63,7 +63,7 @@ const routes: RouteObject[] = [
   {
     path: "/admin",
     element: (
-      <RoleGuard allowedRoles={["admin", "atendente", "caixa"]}>
+      <RoleGuard allowedRoles={["admin", "gerente", "atendente", "caixa"]}>
         <Admin />
       </RoleGuard>
     ),
@@ -71,7 +71,7 @@ const routes: RouteObject[] = [
   {
     path: "/qrcode-mesas",
     element: (
-      <RoleGuard allowedRoles={["caixa", "admin"]}>
+      <RoleGuard allowedRoles={["caixa", "admin", "gerente"]}>
         <QRMesas />
       </RoleGuard>
     ),
@@ -79,7 +79,7 @@ const routes: RouteObject[] = [
   {
     path: "/meus-pedidos",
     element: (
-      <RoleGuard allowedRoles={["cliente", "admin", "atendente", "caixa", "entregador"]}>
+      <RoleGuard allowedRoles={["cliente", "admin", "gerente", "atendente", "caixa", "entregador"]}>
         <MeusPedidos />
       </RoleGuard>
     ),
@@ -87,7 +87,7 @@ const routes: RouteObject[] = [
   {
     path: "/entregas",
     element: (
-      <RoleGuard allowedRoles={["entregador", "admin"]}>
+      <RoleGuard allowedRoles={["entregador", "admin", "gerente"]}>
         <Entregas />
       </RoleGuard>
     ),

@@ -90,6 +90,10 @@ export default function AdminPage() {
   };
   const { user: currentUser } = useAuth();
   const userRole = currentUser?.role || 'cliente';
+  const isAdmin = userRole === "admin";
+  const isGerente = userRole === "admin" || userRole === "gerente";
+  const isCaixa = userRole === "caixa";
+  const isAtendente = userRole === "atendente";
   const { products: dbProducts, categories: dbCategories, updateProduct, deleteProduct, createProduct, refresh: refreshProducts } = useProducts(true);
   const [activeTab, setActiveTab] = useState<"dashboard" | "reports" | "products" | "stock" | "orders" | "customers" | "employees" | "accesses" | "settings" | "reservations" | "feedbacks" | "tests" | "delivery_zones" | "homologation">("orders");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
@@ -116,10 +120,23 @@ export default function AdminPage() {
   ];
 
   const roleTabAccess: Record<string, string[]> = {
-    admin: allTabs.map(t => t.id),
-    caixa: ["orders", "customers", "reservations", "accesses"],
-    atendente: ["orders", "reservations"],
-  };
+  admin: allTabs.map(t => t.id),
+  gerente: [
+    "dashboard",
+    "reports",
+    "products",
+    "stock",
+    "delivery_zones",
+    "orders",
+    "reservations",
+    "feedbacks",
+    "customers",
+    "employees",
+    "accesses",
+  ],
+  caixa: ["orders", "customers", "reservations", "accesses"],
+  atendente: ["orders", "reservations"],
+};
 
   const visibleTabs = allTabs.filter(tab => {
     const allowed = roleTabAccess[userRole] || roleTabAccess.atendente;
@@ -415,14 +432,26 @@ export default function AdminPage() {
             <div>
               <h1 className="font-display text-2xl md:text-3xl font-bold text-np-gold-400">
                 <i className="ri-dashboard-line mr-2"></i>
-                {userRole === 'admin' ? 'Painel Administrativo NP' : userRole === 'caixa' ? 'Painel do Caixa' : 'Painel do Atendente'}
+                {isAdmin
+                  ? "Painel Administrativo NP"
+                  : userRole === "gerente"
+                  ? "Painel Gerencial"
+                  : isCaixa
+                  ? "Painel do Caixa"
+                  : "Painel do Atendente"}
               </h1>
               <p className="text-white/70 text-sm mt-1">
-                {userRole === 'admin' ? 'Gerencie produtos, pedidos, clientes e configurações' : userRole === 'caixa' ? 'Gerencie pedidos, clientes e reservas' : 'Gerencie pedidos e reservas'}
+                {isAdmin
+                  ? "Gerencie produtos, pedidos, clientes e configurações"
+                  : userRole === "gerente"
+                  ? "Gerencie toda a operação da empresa"
+                  : isCaixa
+                  ? "Gerencie pedidos, clientes e reservas"
+                  : "Gerencie pedidos e reservas"}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {userRole === 'admin' && (
+              {isGerente && (
                 <button
                   onClick={() => {
                     setSoundEnabled(!soundEnabled);

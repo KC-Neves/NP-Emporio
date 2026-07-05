@@ -10,7 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-export type UserRole = 'cliente' | 'cozinha' | 'caixa' | 'admin' | 'atendente' | 'entregador';
+export type UserRole = 'cliente' | 'cozinha' | 'caixa' | 'admin' | 'atendente' | 'entregador' | 'gerente';
 
 export type User = {
   id: string;

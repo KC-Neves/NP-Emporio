@@ -19,6 +19,7 @@ interface EmployeesTabProps {
 
 const ROLE_LABELS: Record<string, { label: string; color: string; textColor: string }> = {
   admin: { label: "Admin", color: "bg-purple-100", textColor: "text-purple-800" },
+  gerente: { label: "Gerente", color: "bg-indigo-100", textColor: "text-indigo-800" },
   caixa: { label: "Caixa", color: "bg-green-100", textColor: "text-green-800" },
   cozinha: { label: "Cozinha", color: "bg-blue-100", textColor: "text-blue-800" },
   atendente: { label: "Atendente", color: "bg-orange-100", textColor: "text-orange-800" },
@@ -27,12 +28,26 @@ const ROLE_LABELS: Record<string, { label: string; color: string; textColor: str
 };
 
 const ROLE_ACCESS: Record<string, string> = {
-  admin: "Acesso total: Dashboard, Produtos, Pedidos, Clientes, Funcionários, Configurações",
-  caixa: "Caixa, Pedidos, Clientes, Reservas, QR Mesas",
-  cozinha: "Apenas Cozinha",
-  atendente: "Pedidos, Reservas",
-  entregador: "Entregas, Status de entrega",
-  cliente: "Cardápio, Pedidos, Delivery, Minha conta",
+  admin:
+    "Acesso total: Dashboard, Produtos, Pedidos, Clientes, Funcionários, Configurações",
+
+  gerente:
+    "Dashboard, Relatórios, Produtos, Estoque, Pedidos, Reservas, Clientes, Funcionários, Avaliações e Configurações Gerenciais",
+
+  caixa:
+    "Caixa, Pedidos, Clientes, Reservas, QR Mesas",
+
+  cozinha:
+    "Apenas Cozinha",
+
+  atendente:
+    "Pedidos, Reservas",
+
+  entregador:
+    "Entregas, Status de entrega",
+
+  cliente:
+    "Cardápio, Pedidos, Delivery, Minha conta",
 };
 
 function generateTempPassword(): string {
@@ -548,6 +563,7 @@ export default function EmployeesTab({ addToast }: EmployeesTabProps) {
                       <option value="atendente">Atendente</option>
                       <option value="entregador">Entregador</option>
                       <option value="cliente">Cliente</option>
+                      <option value="gerente">Gerente</option>
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       {ROLE_ACCESS[createForm.role]}
@@ -649,6 +665,7 @@ export default function EmployeesTab({ addToast }: EmployeesTabProps) {
                   <option value="atendente">Atendente</option>
                   <option value="entregador">Entregador</option>
                   <option value="cliente">Cliente</option>
+                  <option value="gerente">Gerente</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">{ROLE_ACCESS[editForm.role]}</p>
               </div>
