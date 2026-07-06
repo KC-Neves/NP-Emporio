@@ -317,13 +317,13 @@ export const menuItems = [
 ];
 
 export const businessHours = [
-  { day: 'Terça-feira', hours: '17:00 - 23:30' },
-  { day: 'Quarta-feira', hours: '17:00 - 23:30' },
-  { day: 'Quinta-feira', hours: '17:00 - 23:30' },
-  { day: 'Sexta-feira', hours: '17:00 - 03:00' },
-  { day: 'Sábado', hours: '17:00 - 03:00' },
-  { day: 'Domingo', hours: '17:00 - 01:30' },
   { day: 'Segunda-feira', hours: 'Fechado' },
+  { day: 'Terça-feira', hours: 'Fechado' },
+  { day: 'Quarta-feira', hours: '17:00 - 23:00' },
+  { day: 'Quinta-feira', hours: '17:00 - 23:00' },
+  { day: 'Sexta-feira', hours: '17:00 - 02:00' },
+  { day: 'Sábado', hours: '17:00 - 02:00' },
+  { day: 'Domingo', hours: '17:00 - 00:00' },
 ];
 
 export const contactInfo = {

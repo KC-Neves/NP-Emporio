@@ -9,15 +9,18 @@ interface CreateUserRequest {
   avatar_url?: string;
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Type': 'application/json',
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      },
+    return new Response('ok', {
+      status: 200,
+      headers: corsHeaders,
     });
   }
 
@@ -28,16 +31,27 @@ Deno.serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Verificar se o chamador é admin
     const authHeader = req.headers.get('authorization');
+
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAdmin.auth.getUser(token);
+
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: corsHeaders,
+      });
     }
 
     const { data: profile } = await supabaseAdmin
@@ -47,36 +61,62 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (profile?.role !== 'admin') {
-      return new Response(JSON.stringify({ error: 'Forbidden: only admin can create users' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: only admin can create users' }),
+        {
+          status: 403,
+          headers: corsHeaders,
+        }
+      );
     }
 
     const body: CreateUserRequest = await req.json();
     const { email, password, full_name, phone, role, avatar_url } = body;
 
     if (!email || !password || !full_name || !role) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
-    // Validar role
-    const allowedRoles = ['cliente', 'cozinha', 'caixa', 'atendente', 'entregador', 'admin', 'gerente'];
+    const allowedRoles = [
+      'cliente',
+      'cozinha',
+      'caixa',
+      'atendente',
+      'entregador',
+      'admin',
+      'gerente',
+    ];
+
     if (!allowedRoles.includes(role)) {
-      return new Response(JSON.stringify({ error: 'Invalid role' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'Invalid role' }), {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
-    // Criar usuário com service role
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { full_name },
-    });
+    const { data: authData, error: authError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name },
+      });
 
     if (authError || !authData.user) {
-      return new Response(JSON.stringify({ error: authError?.message || 'Failed to create user' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+      return new Response(
+        JSON.stringify({
+          error: authError?.message || 'Failed to create user',
+        }),
+        {
+          status: 400,
+          headers: corsHeaders,
+        }
+      );
     }
 
-    // O trigger on_auth_user_created cria o profile automaticamente,
-    // mas usamos UPSERT aqui como garantia e para sobrescrever role/status corretos
     const profileData: Record<string, unknown> = {
       id: authData.user.id,
       full_name,
@@ -85,6 +125,7 @@ Deno.serve(async (req) => {
       email,
       status: 'ativo',
     };
+
     if (avatar_url) profileData.avatar_url = avatar_url;
 
     const { error: profileError } = await supabaseAdmin
@@ -92,19 +133,31 @@ Deno.serve(async (req) => {
       .upsert(profileData, { onConflict: 'id' });
 
     if (profileError) {
-      // Tentar deletar o usuário criado se profile falhou
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      return new Response(JSON.stringify({ error: profileError.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+      return new Response(JSON.stringify({ error: profileError.message }), {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      userId: authData.user.id,
-      email,
-      password,
-      message: 'User created successfully',
-    }), { status: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        userId: authData.user.id,
+        email,
+        password,
+        message: 'User created successfully',
+      }),
+      {
+        status: 200,
+        headers: corsHeaders,
+      }
+    );
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 });

@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
-const STAFF_ROLES = new Set(["cozinha", "caixa", "admin", "atendente", "entregador"]);
+const STAFF_ROLES = new Set([
+  "cozinha",
+  "caixa",
+  "admin",
+  "atendente",
+  "entregador",
+  "gerente",
+]);
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -19,13 +26,38 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
-    { label: "Início", path: "/" },
-    { label: "Cardápio", path: "/cardapio" },
-    { label: "Pedidos", path: "/pedidos" },
-    { label: "Delivery", path: "/delivery" },
-    { label: "Reservas", path: "/reservas" },
-  ];
+  const staffLinks = [
+  {
+    label: "Cozinha",
+    path: "/cozinha",
+    icon: "ri-restaurant-line",
+    roles: ["cozinha", "admin", "gerente"],
+  },
+  {
+    label: "Caixa",
+    path: "/caixa",
+    icon: "ri-coins-line",
+    roles: ["caixa", "admin", "gerente"],
+  },
+  {
+    label: "Admin",
+    path: "/admin",
+    icon: "ri-dashboard-line",
+    roles: ["admin", "gerente", "atendente", "caixa"],
+  },
+  {
+    label: "QR Mesas",
+    path: "/qrcode-mesas",
+    icon: "ri-qr-code-line",
+    roles: ["caixa", "admin", "gerente"],
+  },
+  {
+    label: "Entregas",
+    path: "/entregas",
+    icon: "ri-truck-line",
+    roles: ["entregador", "admin", "gerente"],
+  },
+];
 
   const loggedInNavLinks = user
     ? [

@@ -1761,12 +1761,12 @@ export default function AdminPage() {
                 <div className="space-y-2">
                   {[
                     { day: "Segunda", hours: "Fechado" },
-                    { day: "Terça", hours: "17:00 - 23:30" },
-                    { day: "Quarta", hours: "17:00 - 23:30" },
-                    { day: "Quinta", hours: "17:00 - 23:30" },
-                    { day: "Sexta", hours: "17:00 - 03:00" },
-                    { day: "Sábado", hours: "17:00 - 03:00" },
-                    { day: "Domingo", hours: "17:00 - 01:30" },
+                    { day: "Terça", hours: "Fechado" },
+                    { day: "Quarta", hours: "17:00 - 23:00" },
+                    { day: "Quinta", hours: "17:00 - 23:00" },
+                    { day: "Sexta", hours: "17:00 - 02:00" },
+                    { day: "Sábado", hours: "17:00 - 02:00" },
+                    { day: "Domingo", hours: "17:00 - 00:00" },
                   ].map((h) => (
                     <div key={h.day} className="flex items-center justify-between py-2 border-b border-np-wood-100 last:border-0">
                       <span className="text-sm text-np-purple-700">{h.day}</span>
