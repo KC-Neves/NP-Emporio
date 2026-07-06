@@ -8,8 +8,23 @@ const STAFF_ROLES = new Set([
   "admin",
   "atendente",
   "entregador",
-  "gerente",
 ]);
+
+const navLinks = [
+  { label: "Início", path: "/" },
+  { label: "Cardápio", path: "/cardapio" },
+  { label: "Pedidos", path: "/pedidos" },
+  { label: "Delivery", path: "/delivery" },
+  { label: "Reservas", path: "/reservas" },
+];
+
+const staffLinks = [
+  { label: "Cozinha", path: "/cozinha", icon: "ri-restaurant-line", roles: ["cozinha", "admin"] },
+  { label: "Caixa", path: "/caixa", icon: "ri-coins-line", roles: ["caixa", "admin"] },
+  { label: "Admin", path: "/admin", icon: "ri-dashboard-line", roles: ["admin", "atendente", "caixa"] },
+  { label: "QR Mesas", path: "/qrcode-mesas", icon: "ri-qr-code-line", roles: ["caixa", "admin"] },
+  { label: "Entregas", path: "/entregas", icon: "ri-truck-line", roles: ["entregador", "admin"] },
+];
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -22,25 +37,15 @@ const Navbar = () => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 60);
     };
+
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const staffLinks = [
-  { label: "Cozinha", path: "/cozinha", icon: "ri-restaurant-line", roles: ["cozinha", "admin"] },
-  { label: "Caixa", path: "/caixa", icon: "ri-coins-line", roles: ["caixa", "admin"] },
-  { label: "Admin", path: "/admin", icon: "ri-dashboard-line", roles: ["admin", "atendente", "caixa"] },
-  { label: "QR Mesas", path: "/qrcode-mesas", icon: "ri-qr-code-line", roles: ["caixa", "admin"] },
-  { label: "Entregas", path: "/entregas", icon: "ri-truck-line", roles: ["entregador", "admin"] },
-];
-
-  const loggedInNavLinks = user
-    ? [
-        { label: "Meus Pedidos", path: "/meus-pedidos" },
-      ]
-    : [];
-
   const isStaff = user?.role && STAFF_ROLES.has(user.role);
+
   const visibleStaffLinks = isStaff
     ? staffLinks.filter((link) => link.roles.includes(user.role || "cliente"))
     : [];
@@ -84,57 +89,56 @@ const Navbar = () => {
                     ? "text-np-purple-600"
                     : "text-white"
                   : scrolled
-                    ? "text-gray-700"
-                    : "text-white/80"
+                  ? "text-gray-700"
+                  : "text-white/80"
               }`}
             >
               {link.label}
             </Link>
           ))}
 
-          {loggedInNavLinks.map((link) => (
+          {user && (
             <Link
-              key={link.path}
-              to={link.path}
+              to="/meus-pedidos"
               className={`font-body text-sm font-medium transition-colors hover:text-np-gold-500 ${
-                isActive(link.path)
+                isActive("/meus-pedidos")
                   ? scrolled
                     ? "text-np-purple-600"
                     : "text-white"
                   : scrolled
-                    ? "text-gray-700"
-                    : "text-white/80"
+                  ? "text-gray-700"
+                  : "text-white/80"
               }`}
             >
-              {link.label}
+              Meus Pedidos
             </Link>
-          ))}
+          )}
 
-          {/* Staff Dropdown — só aparece para staff */}
           {visibleStaffLinks.length > 0 && (
-          <div className="relative group">
-            <button
-              className={`font-body text-sm font-medium transition-colors hover:text-np-gold-500 flex items-center gap-1 ${
-                scrolled ? "text-gray-700" : "text-white/80"
-              }`}
-            >
-              <i className="ri-settings-3-line"></i>
-              Equipe
-              <i className="ri-arrow-down-s-line text-xs"></i>
-            </button>
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-np-wood-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
-              {visibleStaffLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="flex items-center gap-2 px-4 py-3 text-sm text-np-purple-700 hover:bg-np-purple-50 transition-colors"
-                >
-                  <i className={link.icon}></i>
-                  {link.label}
-                </Link>
-              ))}
+            <div className="relative group">
+              <button
+                className={`font-body text-sm font-medium transition-colors hover:text-np-gold-500 flex items-center gap-1 ${
+                  scrolled ? "text-gray-700" : "text-white/80"
+                }`}
+              >
+                <i className="ri-settings-3-line"></i>
+                Equipe
+                <i className="ri-arrow-down-s-line text-xs"></i>
+              </button>
+
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-np-wood-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                {visibleStaffLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className="flex items-center gap-2 px-4 py-3 text-sm text-np-purple-700 hover:bg-np-purple-50 transition-colors"
+                  >
+                    <i className={link.icon}></i>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
           )}
 
           <Link
@@ -145,14 +149,13 @@ const Navbar = () => {
                   ? "text-np-purple-600"
                   : "text-white"
                 : scrolled
-                  ? "text-gray-700"
-                  : "text-white/80"
+                ? "text-gray-700"
+                : "text-white/80"
             }`}
           >
             Sobre
           </Link>
 
-          {/* User dropdown */}
           {user ? (
             <div className="relative group">
               <button
@@ -164,6 +167,7 @@ const Navbar = () => {
                 {user.full_name || user.email.split("@")[0]}
                 <i className="ri-arrow-down-s-line text-xs"></i>
               </button>
+
               <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-np-wood-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
                 <Link
                   to="/minha-conta"
@@ -172,6 +176,7 @@ const Navbar = () => {
                   <i className="ri-user-settings-line"></i>
                   Minha Conta
                 </Link>
+
                 <Link
                   to="/meus-pedidos"
                   className="flex items-center gap-2 px-4 py-3 text-sm text-np-purple-700 hover:bg-np-purple-50 transition-colors"
@@ -179,6 +184,7 @@ const Navbar = () => {
                   <i className="ri-shopping-bag-3-line"></i>
                   Meus Pedidos
                 </Link>
+
                 <div className="border-t border-np-wood-100">
                   <button
                     onClick={handleLogout}
@@ -227,7 +233,19 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-            {/* Meus Pedidos no mobile */}
+
+            <Link
+              to="/sobre"
+              onClick={() => setMobileOpen(false)}
+              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                isActive("/sobre")
+                  ? "bg-np-purple-50 text-np-purple-700"
+                  : "text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              Sobre
+            </Link>
+
             {user && (
               <Link
                 to="/meus-pedidos"
@@ -242,7 +260,7 @@ const Navbar = () => {
                 Meus Pedidos
               </Link>
             )}
-            {/* Staff links no mobile — só para staff */}
+
             {visibleStaffLinks.map((link) => (
               <Link
                 key={link.path}
@@ -254,30 +272,33 @@ const Navbar = () => {
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <i className={link.icon}></i>
+                <i className={`${link.icon} mr-1`}></i>
                 {link.label}
               </Link>
             ))}
+
             {user && (
-            <Link
-              to="/minha-conta"
-              onClick={() => setMobileOpen(false)}
-              className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive("/minha-conta")
-                  ? "bg-np-purple-50 text-np-purple-700"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              <i className="ri-user-line mr-1"></i>
-              Minha Conta
-            </Link>
+              <Link
+                to="/minha-conta"
+                onClick={() => setMobileOpen(false)}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  isActive("/minha-conta")
+                    ? "bg-np-purple-50 text-np-purple-700"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <i className="ri-user-line mr-1"></i>
+                Minha Conta
+              </Link>
             )}
+
             {user ? (
               <div className="px-4 py-3 border-t border-gray-100 mt-2">
                 <p className="text-sm font-medium text-np-purple-800 mb-2">
                   <i className="ri-user-smile-line mr-1"></i>
                   {user.full_name || user.email}
                 </p>
+
                 <button
                   onClick={() => {
                     handleLogout();
