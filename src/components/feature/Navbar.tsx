@@ -27,36 +27,11 @@ const Navbar = () => {
   }, []);
 
   const staffLinks = [
-  {
-    label: "Cozinha",
-    path: "/cozinha",
-    icon: "ri-restaurant-line",
-    roles: ["cozinha", "admin", "gerente"],
-  },
-  {
-    label: "Caixa",
-    path: "/caixa",
-    icon: "ri-coins-line",
-    roles: ["caixa", "admin", "gerente"],
-  },
-  {
-    label: "Admin",
-    path: "/admin",
-    icon: "ri-dashboard-line",
-    roles: ["admin", "gerente", "atendente", "caixa"],
-  },
-  {
-    label: "QR Mesas",
-    path: "/qrcode-mesas",
-    icon: "ri-qr-code-line",
-    roles: ["caixa", "admin", "gerente"],
-  },
-  {
-    label: "Entregas",
-    path: "/entregas",
-    icon: "ri-truck-line",
-    roles: ["entregador", "admin", "gerente"],
-  },
+  { label: "Cozinha", path: "/cozinha", icon: "ri-restaurant-line", roles: ["cozinha", "admin"] },
+  { label: "Caixa", path: "/caixa", icon: "ri-coins-line", roles: ["caixa", "admin"] },
+  { label: "Admin", path: "/admin", icon: "ri-dashboard-line", roles: ["admin", "atendente", "caixa"] },
+  { label: "QR Mesas", path: "/qrcode-mesas", icon: "ri-qr-code-line", roles: ["caixa", "admin"] },
+  { label: "Entregas", path: "/entregas", icon: "ri-truck-line", roles: ["entregador", "admin"] },
 ];
 
   const loggedInNavLinks = user
@@ -64,14 +39,6 @@ const Navbar = () => {
         { label: "Meus Pedidos", path: "/meus-pedidos" },
       ]
     : [];
-
-  const staffLinks = [
-    { label: "Cozinha", path: "/cozinha", icon: "ri-restaurant-line", roles: ["cozinha", "admin"] },
-    { label: "Caixa", path: "/caixa", icon: "ri-coins-line", roles: ["caixa", "admin"] },
-    { label: "Admin", path: "/admin", icon: "ri-dashboard-line", roles: ["admin", "atendente", "caixa"] },
-    { label: "QR Mesas", path: "/qrcode-mesas", icon: "ri-qr-code-line", roles: ["caixa", "admin"] },
-    { label: "Entregas", path: "/entregas", icon: "ri-truck-line", roles: ["entregador", "admin"] },
-  ];
 
   const isStaff = user?.role && STAFF_ROLES.has(user.role);
   const visibleStaffLinks = isStaff
