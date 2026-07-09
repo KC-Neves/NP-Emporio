@@ -7,6 +7,7 @@ import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 import { getWhatsAppMessage, openWhatsApp, getEmailSubject, getEmailBody, openEmail, getManualFeedbackMessage } from "./components/OrderNotifications";
 import { getBaseUrl, getFeedbackUrl } from "@/lib/getBaseUrl";
 import { supabase } from "@/lib/supabase";
+import ProductSortableList from "./components/ProductSortableList";
 import type { Order } from "@/hooks/useOrderHistory";
 import type { Product } from "@/hooks/useProducts";
 import type { UserRole } from "@/hooks/useAuth";
@@ -1016,103 +1017,15 @@ export default function AdminPage() {
                         {catProducts.length} itens
                       </span>
                     </div>
-                    <div className="divide-y divide-np-wood-100">
-                      {catProducts.map((product) => (
-                        <div
-                          key={product.id}
-                          className={`flex items-center gap-4 px-4 py-3 hover:bg-np-wood-50 transition-colors ${
-                            !product.active ? "opacity-50" : ""
-                          }`}
-                        >
-                          <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-np-wood-100">
-                            {product.image ? (
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-np-wood-400">
-                                <i className="ri-image-line"></i>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-sm font-medium text-np-purple-900 truncate">
-                                {product.name}
-                              </p>
-                              {product.featured && (
-                                <span className="bg-np-gold-100 text-np-gold-700 text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
-                                  Destaque
-                                </span>
-                              )}
-                              {!product.active && (
-                                <span className="bg-red-100 text-red-600 text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
-                                  Inativo
-                                </span>
-                              )}
-                              {product.minStock > 0 && product.stockQuantity <= product.minStock && (
-                                <span className="bg-red-100 text-red-600 text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 flex items-center gap-1">
-                                  <i className="ri-error-warning-line"></i>
-                                  Estoque baixo ({product.stockQuantity})
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-np-purple-500 truncate">
-                              {(product.description || "").slice(0, 60)}...
-                            </p>
-                            <p className="text-[10px] text-np-purple-400 mt-0.5">
-                              Estoque: <span className={product.minStock > 0 && product.stockQuantity <= product.minStock ? "text-red-600 font-bold" : "text-np-purple-600 font-medium"}>{product.stockQuantity}</span>
-                              {product.minStock > 0 && (
-                                <span className="text-np-purple-300"> / mín: {product.minStock}</span>
-                              )}
-                            </p>
-                          </div>
-                          <span className="text-sm font-bold text-np-purple-900 flex-shrink-0">
-                            {product.priceFormatted}
-                          </span>
-                          <div className="flex gap-1 flex-shrink-0">
-                            <button
-                              onClick={() => openEditModal(product)}
-                              className="p-1.5 rounded-md bg-np-wood-100 text-np-purple-600 hover:bg-np-wood-200 transition-colors"
-                              title="Editar"
-                            >
-                              <i className="ri-edit-line"></i>
-                            </button>
-                            <button
-                              onClick={() => handleToggleFeatured(product.id, product.featured)}
-                              className={`p-1.5 rounded-md transition-colors ${
-                                product.featured
-                                  ? "bg-np-gold-100 text-np-gold-600 hover:bg-np-gold-200"
-                                  : "bg-np-wood-100 text-np-wood-500 hover:bg-np-wood-200"
-                              }`}
-                              title={product.featured ? "Remover destaque" : "Destacar"}
-                            >
-                              <i className="ri-star-line"></i>
-                            </button>
-                            <button
-                              onClick={() => handleToggleActive(product.id, product.active)}
-                              className={`p-1.5 rounded-md transition-colors ${
-                                product.active
-                                  ? "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
-                                  : "bg-green-50 text-green-600 hover:bg-green-100"
-                              }`}
-                              title={product.active ? "Desativar" : "Reativar"}
-                            >
-                              <i className={product.active ? "ri-eye-off-line" : "ri-eye-line"}></i>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="p-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-                              title="Remover"
-                            >
-                              <i className="ri-delete-bin-line"></i>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <ProductSortableList
+                      products={catProducts}
+                      onEdit={openEditModal}
+                      onDelete={handleDeleteProduct}
+                      onToggleFeatured={handleToggleFeatured}
+                      onToggleActive={handleToggleActive}
+                      refreshProducts={refreshProducts}
+                      addToast={(msg, type) => addToast(msg, type || "info", 3000)}
+                    />
                   </div>
                 );
               })}
@@ -1121,6 +1034,11 @@ export default function AdminPage() {
         )}
 
         {/* STOCK */}
+        {activeTab === "stock" && (
+          <StockTab addToast={(msg, type) => addToast(msg, type || 'info', 3000)} />
+        )}
+
+         {/* STOCK */}
         {activeTab === "stock" && (
           <StockTab addToast={(msg, type) => addToast(msg, type || 'info', 3000)} />
         )}
@@ -2304,3 +2222,4 @@ export default function AdminPage() {
     </div>
   );
 }
+
