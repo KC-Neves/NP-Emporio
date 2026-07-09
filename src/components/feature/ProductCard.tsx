@@ -19,15 +19,23 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
   });
 
   return (
-    <div className="group bg-white rounded-xl border border-np-wood-200 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+    <div className={`group bg-white rounded-xl border border-np-wood-200 overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col ${item.soldOut ? 'opacity-75' : ''}`}>
       <div className="relative overflow-hidden h-[220px] bg-white flex-shrink-0">
         <img
           src={item.image}
           alt={item.name}
-          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+          className={`w-full h-full object-cover object-center transition-transform duration-500 ${!item.soldOut ? 'group-hover:scale-105' : 'grayscale'}`}
         />
 
-        {item.featured && (
+        {item.soldOut && (
+          <div className="absolute inset-0 bg-black/45 flex items-center justify-center">
+            <span className="bg-white text-red-600 text-sm font-bold px-4 py-2 rounded-full shadow">
+              ESGOTADO
+            </span>
+          </div>
+        )}
+
+        {item.featured && !item.soldOut && (
           <span className="absolute top-3 left-3 bg-np-gold-500 text-np-purple-900 text-xs font-bold px-3 py-1 rounded-full">
             <i className="ri-star-line mr-1"></i>
             Destaque
@@ -76,25 +84,40 @@ export default function ProductCard({ item, variant = 'full' }: ProductCardProps
         )}
 
         <div className="flex gap-2 mt-auto">
-          <Link
-            to="/pedidos"
-            className={`flex-1 text-center transition-colors whitespace-nowrap rounded-lg border border-np-purple-300 text-np-purple-700 hover:bg-np-purple-50 font-medium ${
-              isCompactVariant ? 'text-xs py-1.5' : 'text-sm py-2.5'
-            }`}
-          >
-            <i className="ri-restaurant-line mr-1"></i>
-            Mesa
-          </Link>
+          {item.soldOut ? (
+            <button
+              type="button"
+              disabled
+              className={`flex-1 text-center rounded-lg border border-gray-300 text-gray-400 bg-gray-100 font-medium cursor-not-allowed ${
+                isCompactVariant ? 'text-xs py-1.5' : 'text-sm py-2.5'
+              }`}
+            >
+              <i className="ri-forbid-2-line mr-1"></i>
+              Indisponível
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/pedidos"
+                className={`flex-1 text-center transition-colors whitespace-nowrap rounded-lg border border-np-purple-300 text-np-purple-700 hover:bg-np-purple-50 font-medium ${
+                  isCompactVariant ? 'text-xs py-1.5' : 'text-sm py-2.5'
+                }`}
+              >
+                <i className="ri-restaurant-line mr-1"></i>
+                Mesa
+              </Link>
 
-          <Link
-            to="/delivery"
-            className={`flex-1 text-center transition-colors whitespace-nowrap rounded-lg border border-np-green-300 text-np-green-700 hover:bg-np-green-50 font-medium ${
-              isCompactVariant ? 'text-xs py-1.5' : 'text-sm py-2.5'
-            }`}
-          >
-            <i className="ri-truck-line mr-1"></i>
-            Delivery
-          </Link>
+              <Link
+                to="/delivery"
+                className={`flex-1 text-center transition-colors whitespace-nowrap rounded-lg border border-np-green-300 text-np-green-700 hover:bg-np-green-50 font-medium ${
+                  isCompactVariant ? 'text-xs py-1.5' : 'text-sm py-2.5'
+                }`}
+              >
+                <i className="ri-truck-line mr-1"></i>
+                Delivery
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>

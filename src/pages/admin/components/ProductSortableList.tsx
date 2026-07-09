@@ -41,21 +41,17 @@ function SortableProductItem({
   onDelete,
   onToggleFeatured,
   onToggleActive,
+  onToggleSoldOut,
 }: {
   product: Product;
   onEdit: (product: Product) => void;
   onDelete: (id: number) => void;
   onToggleFeatured: (id: number, currentFeatured: boolean) => void;
   onToggleActive: (id: number, currentActive: boolean) => void;
+  onToggleSoldOut: (product: Product) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: product.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: product.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -82,11 +78,7 @@ function SortableProductItem({
 
       <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-np-wood-100">
         {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-np-wood-400">
             <i className="ri-image-line"></i>
@@ -96,13 +88,17 @@ function SortableProductItem({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-medium text-np-purple-900 truncate">
-            {product.name}
-          </p>
+          <p className="text-sm font-medium text-np-purple-900 truncate">{product.name}</p>
 
           {product.featured && (
             <span className="bg-np-gold-100 text-np-gold-700 text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
               Destaque
+            </span>
+          )}
+
+          {product.soldOut && (
+            <span className="bg-gray-200 text-gray-700 text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0">
+              Esgotado
             </span>
           )}
 
@@ -167,6 +163,18 @@ function SortableProductItem({
         </button>
 
         <button
+          onClick={() => onToggleSoldOut(product)}
+          className={`p-1.5 rounded-md transition-colors ${
+            product.soldOut
+              ? "bg-green-50 text-green-600 hover:bg-green-100"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+          title={product.soldOut ? "Marcar como disponível" : "Marcar como esgotado"}
+        >
+          <i className={product.soldOut ? "ri-checkbox-circle-line" : "ri-forbid-2-line"}></i>
+        </button>
+
+        <button
           onClick={() => onToggleActive(product.id, product.active)}
           className={`p-1.5 rounded-md transition-colors ${
             product.active
@@ -208,11 +216,30 @@ export default function ProductSortableList({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint: { distance: 8 },
     })
   );
+
+  const handleToggleSoldOut = async (product: Product) => {
+    const nextSoldOut = !product.soldOut;
+
+    const { error } = await supabase
+      .from("products")
+      .update({ sold_out: nextSoldOut })
+      .eq("id", product.id);
+
+    if (error) {
+      addToast?.("Erro ao atualizar esgotado", "error");
+      return;
+    }
+
+    addToast?.(
+      nextSoldOut ? "Produto marcado como esgotado" : "Produto marcado como disponível",
+      "success"
+    );
+
+    refreshProducts();
+  };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -236,9 +263,7 @@ export default function ProductSortableList({
       const updates = reordered.map((product, index) =>
         supabase
           .from("products")
-          .update({
-            display_order: baseOrder + index + 1,
-          })
+          .update({ display_order: baseOrder + index + 1 })
           .eq("id", product.id)
       );
 
@@ -271,10 +296,7 @@ export default function ProductSortableList({
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext
-          items={items.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
+        <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
           <div className="divide-y divide-np-wood-100">
             {items.map((product) => (
               <SortableProductItem
@@ -284,6 +306,7 @@ export default function ProductSortableList({
                 onDelete={onDelete}
                 onToggleFeatured={onToggleFeatured}
                 onToggleActive={onToggleActive}
+                onToggleSoldOut={handleToggleSoldOut}
               />
             ))}
           </div>

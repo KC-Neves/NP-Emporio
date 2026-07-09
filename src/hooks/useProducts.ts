@@ -12,6 +12,7 @@ export interface Product {
   image: string;
   featured: boolean;
   active: boolean;
+  soldOut: boolean;
   stockQuantity: number;
   minStock: number;
   alertStock: number;
@@ -35,6 +36,7 @@ interface DbProduct {
   image_url: string | null;
   featured: boolean;
   active: boolean;
+  sold_out: boolean | null;
   stock_quantity: number | null;
   min_stock: number | null;
   alert_stock: number | null;
@@ -52,13 +54,7 @@ const CATEGORY_META: Record<string, { name: string; icon: string }> = {
   bebidas: { name: "Bebidas", icon: "ri-goblet-line" },
 };
 
-const CATEGORY_ORDER = [
-  "torres",
-  "massas",
-  "salgados",
-  "doces",
-  "bebidas",
-];
+const CATEGORY_ORDER = ["torres", "massas", "salgados", "doces", "bebidas"];
 
 function formatPrice(price: number): string {
   return `R$ ${price.toFixed(2).replace(".", ",")}`;
@@ -79,6 +75,7 @@ function mapDbToProduct(row: DbProduct): Product {
     image: row.image_url || "",
     featured: row.featured || false,
     active: row.active !== false,
+    soldOut: row.sold_out === true,
     stockQuantity: row.stock_quantity ?? 0,
     minStock: row.min_stock ?? 0,
     alertStock: row.alert_stock ?? 0,
@@ -101,6 +98,7 @@ function mapMockItemToProduct(item: (typeof menuItems)[number]): Product {
     image: item.image,
     featured: item.featured,
     active: true,
+    soldOut: false,
     stockQuantity: 0,
     minStock: 0,
     alertStock: 0,
@@ -113,13 +111,11 @@ function mapMockItemToProduct(item: (typeof menuItems)[number]): Product {
 function deriveCategories(products: Product[]): MenuCategory[] {
   const available = new Set(products.map((p) => p.category));
 
-  return CATEGORY_ORDER
-    .filter((category) => available.has(category))
-    .map((category) => ({
-      id: category,
-      name: CATEGORY_META[category].name,
-      icon: CATEGORY_META[category].icon,
-    }));
+  return CATEGORY_ORDER.filter((category) => available.has(category)).map((category) => ({
+    id: category,
+    name: CATEGORY_META[category].name,
+    icon: CATEGORY_META[category].icon,
+  }));
 }
 
 function deduplicateProducts(products: Product[]): Product[] {
@@ -184,9 +180,7 @@ export function useProducts(adminMode = false) {
             }
           }
         } else if (data && isMounted) {
-          const mapped = deduplicateProducts(
-            (data as DbProduct[]).map(mapDbToProduct)
-          );
+          const mapped = deduplicateProducts((data as DbProduct[]).map(mapDbToProduct));
 
           setProducts(mapped);
           setCategories(deriveCategories(mapped));
@@ -244,6 +238,7 @@ export function useProducts(adminMode = false) {
         | "category"
         | "featured"
         | "active"
+        | "soldOut"
         | "stockQuantity"
         | "minStock"
         | "alertStock"
@@ -259,12 +254,14 @@ export function useProducts(adminMode = false) {
     if (updates.category !== undefined) dbUpdates.category = updates.category;
     if (updates.featured !== undefined) dbUpdates.featured = updates.featured;
     if (updates.active !== undefined) dbUpdates.active = updates.active;
+    if (updates.soldOut !== undefined) dbUpdates.sold_out = updates.soldOut;
     if (updates.stockQuantity !== undefined) dbUpdates.stock_quantity = updates.stockQuantity;
     if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
     if (updates.alertStock !== undefined) dbUpdates.alert_stock = updates.alertStock;
     if (updates.image_url !== undefined) dbUpdates.image_url = updates.image_url;
-    if (updates.customizationOptions !== undefined)
+    if (updates.customizationOptions !== undefined) {
       dbUpdates.customization_options = updates.customizationOptions;
+    }
 
     const { error } = await supabase
       .from("products")
@@ -306,6 +303,7 @@ export function useProducts(adminMode = false) {
         image_url: data.image_url || null,
         active: true,
         featured: false,
+        sold_out: false,
         stock_quantity: data.stock_quantity ?? 0,
         min_stock: data.min_stock ?? 5,
         alert_stock: data.alert_stock ?? 10,

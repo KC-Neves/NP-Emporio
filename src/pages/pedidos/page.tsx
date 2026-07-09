@@ -21,6 +21,7 @@ interface Product {
   image: string;
   featured: boolean;
   active: boolean;
+  soldOut: boolean;
   customizationOptions?: {
     id: string;
     name: string;
@@ -171,6 +172,7 @@ export default function PedidosPage() {
               image: row.image_url || "",
               featured: row.featured || false,
               active: row.active !== false,
+              soldOut: row.sold_out === true,
               customizationOptions: row.customization_options || undefined,
             });
           }
@@ -343,6 +345,15 @@ export default function PedidosPage() {
 
   const safeAddItem = (item: Product, customizations?: CartItemCustomization[], extraPrice?: number) => {
     console.log("[PEDIDOS] produto selecionado:", item);
+    if (item.soldOut) {
+  showToast({
+    id: nextToastId(),
+    message: "Este produto está esgotado no momento.",
+    type: "warning",
+    duration: 3000,
+  });
+  return;
+}
     try {
       if (!item || typeof item !== "object") {
         console.error("[PEDIDOS] produto inválido:", item);
@@ -596,8 +607,28 @@ export default function PedidosPage() {
                   {filteredItems.map((item) => (
                     <div key={item?.id || Math.random()} className="bg-white rounded-xl border border-np-wood-200 overflow-hidden hover:shadow-md transition-shadow">
                       <div className="flex">
-                        <div className="w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
-                          <img src={item?.image || "https://readdy.ai/api/search-image?query=minimalist%20food%20placeholder%20icon%20on%20light%20background%20simple%20illustration&width=200&height=200&seq=1&orientation=squarish"} alt={item?.name || "Produto"} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "https://readdy.ai/api/search-image?query=minimalist%20food%20placeholder%20icon%20on%20light%20background%20simple%20illustration&width=200&height=200&seq=1&orientation=squarish"; }} />
+                        <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0">
+                          <img
+                        src={
+                            item?.image ||
+                        "https://readdy.ai/api/search-image?query=minimalist%20food%20placeholder%20icon%20on%20light%20background%20simple%20illustration&width=200&height=200&seq=1&orientation=squarish"
+  }
+  alt={item?.name || "Produto"}
+  className={`w-full h-full object-cover ${
+    item?.soldOut ? "grayscale opacity-70" : ""
+  }`}
+  onError={(e) => {
+    (e.target as HTMLImageElement).src =
+      "https://readdy.ai/api/search-image?query=minimalist%20food%20placeholder%20icon%20on%20light%20background%20simple%20illustration&width=200&height=200&seq=1&orientation=squarish";
+  }}
+/>
+{item?.soldOut && (
+  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+    <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+      ESGOTADO
+    </span>
+  </div>
+)}
                         </div>
                         <div className="flex-1 p-3 md:p-4 flex flex-col justify-between">
                           <div>
@@ -607,9 +638,31 @@ export default function PedidosPage() {
                               <p className="text-xs text-np-purple-500 mt-0.5"><i className="ri-settings-3-line mr-1"></i>Personalizável</p>
                             )}
                           </div>
-                          <button onClick={() => item && openCustomizationModal(item)} className="mt-2 w-full bg-np-gold-500 hover:bg-np-gold-600 text-np-purple-900 font-medium py-1.5 px-3 rounded-md text-sm transition-colors whitespace-nowrap flex items-center justify-center gap-1">
-                            <i className="ri-add-line"></i>{item?.customizationOptions && item.customizationOptions.length > 0 ? "Personalizar" : "Adicionar"}
-                          </button>
+                          <button
+  disabled={item?.soldOut}
+  onClick={() => {
+    if (item?.soldOut) return;
+    item && openCustomizationModal(item);
+  }}
+  className={`mt-2 w-full font-medium py-1.5 px-3 rounded-md text-sm transition-colors flex items-center justify-center gap-1 ${
+    item?.soldOut
+      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+      : "bg-np-gold-500 hover:bg-np-gold-600 text-np-purple-900"
+  }`}
+>
+  <i
+    className={
+      item?.soldOut ? "ri-forbid-2-line" : "ri-add-line"
+    }
+  ></i>
+
+  {item?.soldOut
+    ? "ESGOTADO"
+    : item?.customizationOptions &&
+      item.customizationOptions.length > 0
+    ? "Personalizar"
+    : "Adicionar"}
+</button>
                         </div>
                       </div>
                     </div>
