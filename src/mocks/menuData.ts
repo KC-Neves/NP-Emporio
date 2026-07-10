@@ -13,10 +13,11 @@ export interface CustomizationOption {
   required: boolean;
   maxSelect?: number;
   options: {
-    id: string;
-    label: string;
-    price?: number;
-  }[];
+  id: string;
+  label: string;
+  price?: number;
+  available?: boolean;
+}[];
 }
 
 export const menuItems = [

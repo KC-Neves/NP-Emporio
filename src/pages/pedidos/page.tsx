@@ -32,6 +32,7 @@ interface Product {
       id: string;
       label: string;
       price?: number;
+      available?: boolean;
     }[];
   }[];
 }
@@ -280,8 +281,9 @@ export default function PedidosPage() {
     }
     const initialState: Record<string, string[]> = {};
     item.customizationOptions.forEach((opt) => {
-      if (opt.type === 'single' && opt.required && opt.options.length > 0) {
-        initialState[opt.id] = [opt.options[0].id];
+      const availableOptions = opt.options.filter((option) => option.available !== false);
+      if (opt.type === 'single' && opt.required && availableOptions.length > 0) {
+        initialState[opt.id] = [availableOptions[0].id];
       } else {
         initialState[opt.id] = [];
       }
@@ -297,10 +299,28 @@ export default function PedidosPage() {
 
     for (const opt of product.customizationOptions || []) {
       const selected = customizationState[opt.id] || [];
+      const availableOptions = opt.options.filter((option) => option.available !== false);
+
+      if (opt.required && availableOptions.length === 0) {
+        setCustomizationError(`Todas as opções de ${opt.name} estão esgotadas no momento.`);
+        return;
+      }
+
       if (opt.required && selected.length === 0) {
         setCustomizationError(`Por favor, selecione uma opção em: ${opt.name}`);
         return;
       }
+
+      const unavailableSelected = selected.find((selectedId) => {
+        const option = opt.options.find((o) => o.id === selectedId);
+        return option?.available === false;
+      });
+
+      if (unavailableSelected) {
+        setCustomizationError(`Você selecionou uma opção esgotada em: ${opt.name}`);
+        return;
+      }
+
       if (opt.maxSelect && selected.length > opt.maxSelect) {
         setCustomizationError(`Você pode selecionar no máximo ${opt.maxSelect} opções em: ${opt.name}`);
         return;
@@ -848,18 +868,32 @@ export default function PedidosPage() {
                     <div className="flex flex-wrap gap-2">
                       {opt.options.map((option) => {
                         const isSelected = selected.includes(option.id);
+                        const isAvailable = option.available !== false;
                         return (
-                          <button key={option.id} onClick={() => {
-                            setCustomizationState((prev) => {
-                              const current = prev[opt.id] || [];
-                              if (isSingle) return { ...prev, [opt.id]: [option.id] };
-                              if (isSelected) return { ...prev, [opt.id]: current.filter((id) => id !== option.id) };
-                              if (opt.maxSelect && current.length >= opt.maxSelect) return prev;
-                              return { ...prev, [opt.id]: [...current, option.id] };
-                            });
-                          }} className={`px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${isSelected ? "bg-np-purple-600 text-white" : "bg-np-wood-100 text-np-purple-700 hover:bg-np-wood-200 border border-np-wood-300"}`}>
+                          <button
+                            key={option.id}
+                            disabled={!isAvailable}
+                            onClick={() => {
+                              if (!isAvailable) return;
+                              setCustomizationState((prev) => {
+                                const current = prev[opt.id] || [];
+                                if (isSingle) return { ...prev, [opt.id]: [option.id] };
+                                if (isSelected) return { ...prev, [opt.id]: current.filter((id) => id !== option.id) };
+                                if (opt.maxSelect && current.length >= opt.maxSelect) return prev;
+                                return { ...prev, [opt.id]: [...current, option.id] };
+                              });
+                            }}
+                            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap border ${
+                              !isAvailable
+                                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through"
+                                : isSelected
+                                ? "bg-np-purple-600 text-white border-np-purple-600"
+                                : "bg-np-wood-100 text-np-purple-700 hover:bg-np-wood-200 border-np-wood-300"
+                            }`}
+                          >
                             {option.label}
                             {isAddon && option.price && option.price > 0 && <span className="ml-1">+R$ {option.price.toFixed(2)}</span>}
+                            {!isAvailable && <span className="ml-1 no-underline text-red-500">ESGOTADO</span>}
                           </button>
                         );
                       })}
