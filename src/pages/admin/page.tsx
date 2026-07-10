@@ -156,7 +156,16 @@ export default function AdminPage() {
 
   // Edit product state
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [editForm, setEditForm] = useState({ name: "", description: "", price: 0, category: "", image_url: "", stock_quantity: 0, min_stock: 0 });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    price: 0,
+    category: "",
+    image_url: "",
+    stock_quantity: 0,
+    min_stock: 0,
+    customizationOptions: [] as NonNullable<Product["customizationOptions"]>,
+  });
 
   // Create product state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -271,7 +280,38 @@ export default function AdminPage() {
       image_url: product.image || "",
       stock_quantity: product.stockQuantity,
       min_stock: product.minStock,
+      customizationOptions: (product.customizationOptions || []).map((group) => ({
+        ...group,
+        options: group.options.map((option) => ({
+          ...option,
+          available: option.available !== false,
+        })),
+      })),
     });
+  };
+
+  const handleToggleCustomizationAvailability = (
+    groupIndex: number,
+    optionIndex: number
+  ) => {
+    setEditForm((current) => ({
+      ...current,
+      customizationOptions: current.customizationOptions.map((group, currentGroupIndex) => {
+        if (currentGroupIndex !== groupIndex) return group;
+
+        return {
+          ...group,
+          options: group.options.map((option, currentOptionIndex) => {
+            if (currentOptionIndex !== optionIndex) return option;
+
+            return {
+              ...option,
+              available: option.available === false,
+            };
+          }),
+        };
+      }),
+    }));
   };
 
   const handleSaveEdit = async () => {
@@ -281,6 +321,7 @@ export default function AdminPage() {
       image_url: editForm.image_url,
       stockQuantity: editForm.stock_quantity,
       minStock: editForm.min_stock,
+      customizationOptions: editForm.customizationOptions,
     });
     if (!error) {
       addToast("Produto atualizado com sucesso!", "success", 3000);
@@ -1814,6 +1855,105 @@ export default function AdminPage() {
                   </div>
                 )}
               </div>
+
+              {editForm.customizationOptions.length > 0 && (
+                <div className="border-t border-np-wood-200 pt-4">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <h4 className="font-display text-base font-bold text-np-purple-900">
+                        Disponibilidade das opções
+                      </h4>
+                      <p className="text-xs text-np-purple-500 mt-0.5">
+                        Marque ingredientes, molhos, massas ou adicionais como disponíveis ou esgotados.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {editForm.customizationOptions.map((group, groupIndex) => (
+                      <div
+                        key={group.id}
+                        className="rounded-xl border border-np-wood-200 bg-np-wood-50 p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div>
+                            <p className="text-sm font-semibold text-np-purple-900">
+                              {group.name}
+                            </p>
+                            <p className="text-[11px] text-np-purple-500">
+                              {group.options.length} opção{group.options.length !== 1 ? "ões" : ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          {group.options.map((option, optionIndex) => {
+                            const isAvailable = option.available !== false;
+
+                            return (
+                              <div
+                                key={option.id}
+                                className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${
+                                  isAvailable
+                                    ? "border-np-green-200 bg-white"
+                                    : "border-red-200 bg-red-50"
+                                }`}
+                              >
+                                <div className="min-w-0">
+                                  <p
+                                    className={`text-sm font-medium truncate ${
+                                      isAvailable
+                                        ? "text-np-purple-900"
+                                        : "text-red-700 line-through"
+                                    }`}
+                                  >
+                                    {option.label}
+                                  </p>
+
+                                  {typeof option.price === "number" && option.price > 0 && (
+                                    <p className="text-xs text-np-purple-500">
+                                      Adicional: R$ {option.price.toFixed(2).replace(".", ",")}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleCustomizationAvailability(
+                                      groupIndex,
+                                      optionIndex
+                                    )
+                                  }
+                                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+                                    isAvailable
+                                      ? "bg-np-green-100 text-np-green-700 hover:bg-np-green-200"
+                                      : "bg-red-100 text-red-700 hover:bg-red-200"
+                                  }`}
+                                  title={
+                                    isAvailable
+                                      ? "Clique para marcar como esgotado"
+                                      : "Clique para marcar como disponível"
+                                  }
+                                >
+                                  <i
+                                    className={`mr-1 ${
+                                      isAvailable
+                                        ? "ri-checkbox-circle-line"
+                                        : "ri-close-circle-line"
+                                    }`}
+                                  ></i>
+                                  {isAvailable ? "Disponível" : "Esgotado"}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex gap-3 mt-6">
               <button
