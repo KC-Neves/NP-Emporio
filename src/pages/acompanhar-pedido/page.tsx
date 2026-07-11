@@ -153,6 +153,16 @@ interface OrderData {
   createdAt: string;
 }
 
+interface QueueInfo {
+  participatesInQueue: boolean;
+  ordersAhead: number;
+  estimatedMinutes: number;
+  stations: {
+    pasta: number;
+    fryer: number;
+  };
+}
+
 function useDestinationCoords(orderData: OrderData | null): DestCoords {
   const [coords, setCoords] = useState<DestCoords>({ lat: null, lng: null });
   const cachedRef = useRef<Map<string, DestCoords>>(new Map());
@@ -201,6 +211,8 @@ export default function AcompanharPedidoPage() {
   const [valid, setValid] = useState<boolean | null>(null);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [queueInfo, setQueueInfo] = useState<QueueInfo | null>(null);
+  const [queueLoading, setQueueLoading] = useState(false);
   const { getZoneByNeighborhood } = useDeliveryZones();
 
   // ── Estado do áudio ──
@@ -314,6 +326,44 @@ export default function AcompanharPedidoPage() {
   // Geocode destination for map
   const destCoords = useDestinationCoords(orderData);
 
+  const fetchQueueInfo = useCallback(async (orderId: string) => {
+    try {
+      setQueueLoading(true);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_PUBLIC_SUPABASE_URL}/functions/v1/get-order-queue?orderId=${encodeURIComponent(orderId)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error("[QUEUE] Falha ao consultar fila:", response.status);
+        return;
+      }
+
+      const result = await response.json();
+
+      setQueueInfo({
+        participatesInQueue: result.participatesInQueue === true,
+        ordersAhead: Number(result.ordersAhead || 0),
+        estimatedMinutes: Number(result.estimatedMinutes || 35),
+        stations: {
+          pasta: Number(result.stations?.pasta || 0),
+          fryer: Number(result.stations?.fryer || 0),
+        },
+      });
+    } catch (queueError) {
+      console.error("[QUEUE] Erro ao consultar fila:", queueError);
+    } finally {
+      setQueueLoading(false);
+    }
+  }, []);
+
   const validateOrder = async () => {
     if (!codigo) {
       setValid(false);
@@ -355,6 +405,8 @@ export default function AcompanharPedidoPage() {
             items: result.items || [],
             createdAt: result.createdAt,
           });
+
+          await fetchQueueInfo(result.orderId);
         } else {
           setValid(false);
         }
@@ -454,6 +506,19 @@ export default function AcompanharPedidoPage() {
     }, 10000);
     return () => clearInterval(interval);
   }, [codigo, valid, orderData]);
+
+  // Atualiza a posição na fila a cada 10 segundos
+  useEffect(() => {
+    if (!orderData?.orderId) return;
+
+    fetchQueueInfo(orderData.orderId);
+
+    const interval = setInterval(() => {
+      fetchQueueInfo(orderData.orderId);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [orderData?.orderId, fetchQueueInfo]);
 
   // Timeline logic
   const isDelivery = orderData?.orderType === "delivery";
@@ -677,6 +742,58 @@ export default function AcompanharPedidoPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Fila inteligente da cozinha */}
+              {queueInfo?.participatesInQueue &&
+                ["pending", "preparing"].includes(orderData.status) && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i className="ri-timer-flash-line text-2xl text-amber-700"></i>
+                      </div>
+
+                      <div className="flex-1">
+                        <p className="text-base font-bold text-amber-900">
+                          {queueLoading
+                            ? "Atualizando sua posição na fila..."
+                            : queueInfo.ordersAhead > 0
+                            ? `Há ${queueInfo.ordersAhead} ${
+                                queueInfo.ordersAhead === 1
+                                  ? "pedido"
+                                  : "pedidos"
+                              } à sua frente`
+                            : "Seu pedido é o próximo da fila"}
+                        </p>
+
+                        <p className="text-sm text-amber-800 mt-1">
+                          O tempo médio estimado para ficar pronto é de aproximadamente{" "}
+                          <strong>{queueInfo.estimatedMinutes} minutos</strong>.
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {queueInfo.stations.pasta > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-200 text-xs font-medium text-amber-800">
+                              <i className="ri-restaurant-2-line"></i>
+                              Fila de massas: {queueInfo.stations.pasta}
+                            </span>
+                          )}
+
+                          {queueInfo.stations.fryer > 0 && (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-200 text-xs font-medium text-amber-800">
+                              <i className="ri-fire-line"></i>
+                              Fila da fritadeira: {queueInfo.stations.fryer}
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-amber-700 mt-3">
+                          A posição considera pedidos de mesa e delivery com macarrão,
+                          batatas e salgados fritos.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Feedback CTA — só após entrega */}
               {orderData.status === "delivered" && (
